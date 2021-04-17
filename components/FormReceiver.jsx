@@ -12,6 +12,7 @@ const FormReceiver = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true)
   const [objectImage, setObjectImage] = useState(null)
   const [measurements, setMeasurements] = useState()
+  const [loadingMessage, setLoadingMessage] = useState('Converting image into 3D, hang on!')
 
   const uploadToAWS = async (uri, prefix, filename, mediaType) => {
     // Generates a random fileId
@@ -64,6 +65,7 @@ const FormReceiver = ({ route, navigation }) => {
 
       // Uploads object to AWS
       renderedObject = await axios.post('https://image2scan.3dmeasureup.com/createmesh', params1)
+      setLoadingMessage('Uploading .obj')
       // Creates a folder
       let folder = FileSystem.cacheDirectory + uuid.v4()
       await FileSystem.makeDirectoryAsync(folder, { intermediates: true })
@@ -95,7 +97,8 @@ const FormReceiver = ({ route, navigation }) => {
       "x-api-key": API_KEY_3D
     }
     let response2
-    Measurements are mocked out.Comment back in below and change requestId param in line 114
+    setLoadingMessage('Producing measurements')
+    // Measurements are mocked out.Comment back in below and change requestId param in line 114
     // try {
     //   console.log(`Sending create measurements request with params: ${params2}`)
     //   response2 = await axios.post('https://api.3dmu.prototechsolutions.com/v3/models/measure', params2, { headers: headers })
@@ -107,10 +110,11 @@ const FormReceiver = ({ route, navigation }) => {
     // }
 
     // Request to retrieve measurements
-
+    setLoadingMessage('Retrieving measurements')
     try {
       console.log(`Sending GET request to retrieve measurements`)
       let mockId = "73e30ee0-9dd4-11eb-9c69-0142fbeb1cb3"
+
       let measurements = await axios.get(`https://api.3dmu.prototechsolutions.com/v3/models/metrics?requestId=${mockId}`, { headers: headers })
       console.log(measurements)
 
@@ -131,13 +135,16 @@ const FormReceiver = ({ route, navigation }) => {
   return (
     <View style={styles.formContainer}>
       {loading ? (
-        <Text style={styles.loaderText}>Fetching your measurements, just a moment!</Text>
+        <>
+          <Text style={styles.loaderText}>{loadingMessage}</Text>
+          <ActivityIndicator style={styles.loader} size='large' animating={loading} />
+        </>
       ) : (
           <Text style={globals.h1}>Your Measurements</Text>
         )}
 
 
-      <ActivityIndicator style={styles.loader} size='large' animating={loading} />
+
       {measurements && (
         <FlatList
           data={measurements}
